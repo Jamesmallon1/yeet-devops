@@ -28,7 +28,7 @@ write_files:
           ip saddr ${monolith_ip} tcp dport { 5432, 9100, 9187, 22 } accept
         }
         chain forward {
-          type filter hook forward priority 0; policy drop;
+          type filter hook forward priority 0; policy accept;
         }
         chain output {
           type filter hook output priority 0; policy accept;

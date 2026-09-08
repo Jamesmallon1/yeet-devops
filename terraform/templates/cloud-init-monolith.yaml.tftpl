@@ -30,8 +30,9 @@ write_files:
           tcp dport 22 accept
         }
         chain forward {
-          type filter hook forward priority 0; policy drop;
-          # docker-managed rules are inserted by dockerd above this policy
+          # accept: Docker manages container forwarding in its own tables; a drop policy here blocks
+          # containers from reaching the private network (Timescale) and the internet
+          type filter hook forward priority 0; policy accept;
         }
         chain output {
           type filter hook output priority 0; policy accept;
@@ -93,7 +94,7 @@ write_files:
       RUST_LOG=info,yeet=debug
       BIND_ADDR=0.0.0.0:8080
       METRICS_ADDR=0.0.0.0:9464
-      APP_DATABASE_URL=postgres://yeet:${appdb_password}@/yeet_app?host=/var/run/postgresql
+      APP_DATABASE_URL=postgres://yeet:${appdb_password}@localhost/yeet_app?host=/var/run/postgresql
       TS_INDEXER_DATABASE_URL=postgres://yeet_indexer:${ts_indexer_password}@${timescale_ip}:5432/yeet_ts
       TS_API_DATABASE_URL=postgres://yeet_api:${ts_api_password}@${timescale_ip}:5432/yeet_ts
       QUICKNODE_ARC_HTTP=${quicknode_http}
