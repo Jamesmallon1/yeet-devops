@@ -66,7 +66,7 @@ resource "cloudflare_ruleset" "waf_custom" {
 }
 
 # ---------------- rate limiting ----------------
-# NOTE: Free plan allows 1 rate-limiting rule, Pro 2, Business 5. Order matters: most specific first.
+# NOTE: Free plan allows 1 rate-limiting rule, Pro 2 (we are on Pro), Business 5. Most specific first.
 resource "cloudflare_ruleset" "rate_limit" {
   zone_id     = var.cloudflare_zone_id
   name        = "${local.name}-ratelimit"
@@ -89,9 +89,9 @@ resource "cloudflare_ruleset" "rate_limit" {
       }
     },
     {
-      ref         = "rl_api"
-      description = "api: 300 requests per minute per IP"
-      expression  = "(http.host eq \"${local.api_host}\")"
+      ref         = "rl_backend"
+      description = "api + ws: 300 requests per minute per IP (ws handshakes count as requests)"
+      expression  = "(http.host in {\"${local.api_host}\" \"${local.ws_host}\"})"
       action      = "block"
       enabled     = true
       ratelimit = {
@@ -99,19 +99,6 @@ resource "cloudflare_ruleset" "rate_limit" {
         period              = 60
         requests_per_period = 300
         mitigation_timeout  = 60
-      }
-    },
-    {
-      ref         = "rl_ws_connects"
-      description = "ws: 30 new connections per minute per IP"
-      expression  = "(http.host eq \"${local.ws_host}\")"
-      action      = "block"
-      enabled     = true
-      ratelimit = {
-        characteristics     = ["ip.src", "cf.colo.id"]
-        period              = 60
-        requests_per_period = 30
-        mitigation_timeout  = 120
       }
     },
   ]
@@ -171,8 +158,7 @@ resource "cloudflare_ruleset" "cache" {
       action_parameters = {
         cache = true
         edge_ttl = {
-          mode    = "respect_origin"
-          default = 1
+          mode = "respect_origin"
         }
         browser_ttl = {
           mode = "respect_origin"

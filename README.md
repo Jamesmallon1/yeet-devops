@@ -42,7 +42,7 @@ scripts/     bootstrap.sh (create), ssh.sh (tunnel ssh), deploy.sh (roll image),
 - Timescale shell: `scripts/ssh.sh timescale 'docker exec -it timescale psql -U postgres -d yeet_ts'`.
 
 ## Notes
-- Cloudflare plan limits: Free = 1 rate-limit rule; Pro = 2; Business = 5. `cloudflare_edge.tf` defines 3 → on Free keep only `rl_api`, or upgrade to Pro ($20/mo, also unlocks `enable_managed_waf` and bot score).
+- Cloudflare plan limits: Free = 1 rate-limit rule; Pro = 2 (current: `rl_launch`, `rl_backend`); Business = 5.
 - `/api/v1/tokens/launch` bot protection = Cloudflare **Turnstile** (frontend widget + backend verification), not a WAF challenge: challenges cannot be solved by `fetch()`. Rate limit 5/min/IP is the backstop.
 - Cloud-init runs once; `hcloud_server.user_data` changes are ignored on purpose. Config drift after day 1 goes through `scripts/`.
 - Destroying the timescale server destroys the data (local NVMe). Everything in it is re-derivable by replaying the indexer from the deploy block.
