@@ -13,7 +13,9 @@ write_files:
     permissions: "0644"
     content: |
       #!/usr/sbin/nft -f
-      flush ruleset
+      # Only manage our own table. Never `flush ruleset`: that destroys Docker's iptables-nft chains.
+      table inet filter
+      flush table inet filter
       table inet filter {
         chain input {
           type filter hook input priority 0; policy drop;
@@ -90,6 +92,7 @@ runcmd:
   - sysctl --system
   - systemctl enable --now nftables
   - nft -f /etc/nftables.conf
+  - systemctl restart docker
   - systemctl restart ssh
   - mkdir -p /var/lib/yeet/timescale
   - chown -R 1000:1000 /var/lib/yeet/timescale

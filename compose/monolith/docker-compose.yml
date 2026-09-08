@@ -37,16 +37,10 @@ services:
       POSTGRES_USER: yeet
       POSTGRES_PASSWORD: ${APPDB_PASSWORD}
       POSTGRES_DB: yeet_app
-    command:
-      - postgres
-      - -c shared_buffers=2GB
-      - -c effective_cache_size=6GB
-      - -c work_mem=32MB
-      - -c maintenance_work_mem=512MB
-      - -c wal_compression=zstd
-      - -c random_page_cost=1.1
-      - -c log_min_duration_statement=20ms
-      - -c unix_socket_directories=/var/run/postgresql
+    command: >
+      postgres -c shared_buffers=2GB -c effective_cache_size=6GB -c work_mem=32MB
+               -c maintenance_work_mem=512MB -c wal_compression=zstd -c random_page_cost=1.1
+               -c log_min_duration_statement=20ms -c unix_socket_directories=/var/run/postgresql
     volumes:
       - /var/lib/yeet/appdb:/var/lib/postgresql/data
       - pgsock:/var/run/postgresql
