@@ -260,7 +260,7 @@ resource "cloudflare_dns_record" "apex" {
   zone_id = var.cloudflare_zone_id
   name    = var.domain
   type    = "CNAME"
-  content = "${cloudflare_pages_project.frontend[0].name}.pages.dev"
+  content = cloudflare_pages_project.frontend[0].subdomain
   proxied = true
   ttl     = 1
 }
@@ -270,7 +270,7 @@ resource "cloudflare_dns_record" "www" {
   zone_id = var.cloudflare_zone_id
   name    = "www.${var.domain}"
   type    = "CNAME"
-  content = "${cloudflare_pages_project.frontend[0].name}.pages.dev"
+  content = cloudflare_pages_project.frontend[0].subdomain
   proxied = true
   ttl     = 1
 }
