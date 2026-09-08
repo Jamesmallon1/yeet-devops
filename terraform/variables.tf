@@ -140,3 +140,14 @@ variable "enable_pages" {
   default     = false
   description = "Pages project + domains. Requires token scope Cloudflare Pages:Edit."
 }
+
+variable "turnstile_secret" {
+  type      = string
+  sensitive = true
+  default   = ""
+}
+
+variable "turnstile_site_key" {
+  type    = string
+  default = ""
+}

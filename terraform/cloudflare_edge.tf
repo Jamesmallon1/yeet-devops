@@ -195,8 +195,8 @@ resource "cloudflare_pages_project" "frontend" {
   production_branch = "main"
 
   build_config = {
-    build_command   = "pnpm dlx @cloudflare/next-on-pages@1"
-    destination_dir = ".vercel/output/static"
+    build_command   = "pnpm build" # static export (next.config output: "export")
+    destination_dir = "out"
     root_dir        = "/"
   }
 
@@ -218,20 +218,24 @@ resource "cloudflare_pages_project" "frontend" {
       compatibility_date  = "2026-09-01"
       compatibility_flags = ["nodejs_compat"]
       env_vars = {
-        NEXT_PUBLIC_YEET_CHAIN = { type = "plain_text", value = var.yeet_chain }
-        NEXT_PUBLIC_API_URL    = { type = "plain_text", value = "https://${local.api_host}" }
-        NEXT_PUBLIC_WS_URL     = { type = "plain_text", value = "wss://${local.ws_host}/ws" }
-        NEXT_PUBLIC_IMAGES_URL = { type = "plain_text", value = "https://${local.images_host}" }
+        NEXT_PUBLIC_YEET_CHAIN         = { type = "plain_text", value = var.yeet_chain }
+        NEXT_PUBLIC_API_URL            = { type = "plain_text", value = "https://${local.api_host}" }
+        NEXT_PUBLIC_WS_URL             = { type = "plain_text", value = "wss://${local.ws_host}/ws" }
+        NEXT_PUBLIC_IMAGES_URL         = { type = "plain_text", value = "https://${local.images_host}" }
+        NEXT_PUBLIC_TURNSTILE_SITE_KEY = { type = "plain_text", value = var.turnstile_site_key }
+        NEXT_PUBLIC_STACK              = { type = "plain_text", value = "lite" }
       }
     }
     preview = {
       compatibility_date  = "2026-09-01"
       compatibility_flags = ["nodejs_compat"]
       env_vars = {
-        NEXT_PUBLIC_YEET_CHAIN = { type = "plain_text", value = "arc-testnet" }
-        NEXT_PUBLIC_API_URL    = { type = "plain_text", value = "https://${local.api_host}" }
-        NEXT_PUBLIC_WS_URL     = { type = "plain_text", value = "wss://${local.ws_host}/ws" }
-        NEXT_PUBLIC_IMAGES_URL = { type = "plain_text", value = "https://${local.images_host}" }
+        NEXT_PUBLIC_YEET_CHAIN         = { type = "plain_text", value = "arc-testnet" }
+        NEXT_PUBLIC_API_URL            = { type = "plain_text", value = "https://${local.api_host}" }
+        NEXT_PUBLIC_WS_URL             = { type = "plain_text", value = "wss://${local.ws_host}/ws" }
+        NEXT_PUBLIC_IMAGES_URL         = { type = "plain_text", value = "https://${local.images_host}" }
+        NEXT_PUBLIC_TURNSTILE_SITE_KEY = { type = "plain_text", value = var.turnstile_site_key }
+        NEXT_PUBLIC_STACK              = { type = "plain_text", value = "lite" }
       }
     }
   }

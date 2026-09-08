@@ -107,6 +107,7 @@ write_files:
       IMAGES_BASE_URL=https://${images_host}
       TRUST_CF_CONNECTING_IP=true
       WS_MAX_CONNECTIONS=100000
+      TURNSTILE_SECRET=${turnstile_secret}
 
   - path: /opt/yeet/docker-compose.yml
     permissions: "0644"
