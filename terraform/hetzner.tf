@@ -160,6 +160,7 @@ resource "hcloud_server" "monolith" {
     quicknode_http      = var.quicknode_http
     quicknode_ws        = var.quicknode_ws
     pinata_jwt          = var.pinata_jwt
+    turnstile_secret    = var.turnstile_secret
     r2_bucket           = var.enable_r2 ? cloudflare_r2_bucket.images[0].name : "yeet-images-${var.env}"
     r2_account_id       = var.cloudflare_account_id
     images_host         = local.images_host
