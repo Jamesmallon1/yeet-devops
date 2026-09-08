@@ -1,0 +1,154 @@
+#cloud-config
+package_update: true
+package_upgrade: true
+packages:
+  - docker.io
+  - docker-compose-v2
+  - nftables
+  - zstd
+  - chrony
+  - awscli
+
+write_files:
+  - path: /etc/nftables.conf
+    permissions: "0644"
+    content: |
+      #!/usr/sbin/nft -f
+      flush ruleset
+      table inet filter {
+        chain input {
+          type filter hook input priority 0; policy drop;
+          iif lo accept
+          ct state established,related accept
+          ct state invalid drop
+          ip protocol icmp accept
+          ip6 nexthdr icmpv6 accept
+          # SSH: normally reached via cloudflared on loopback; port left open here because the
+          # Hetzner firewall already drops public 22 unless emergency_admin_cidrs is set.
+          tcp dport 22 accept
+        }
+        chain forward {
+          type filter hook forward priority 0; policy drop;
+          # docker-managed rules are inserted by dockerd above this policy
+        }
+        chain output {
+          type filter hook output priority 0; policy accept;
+        }
+      }
+
+  - path: /etc/sysctl.d/99-yeet.conf
+    content: |
+      # 100k+ websockets
+      fs.file-max = 2097152
+      fs.nr_open = 2097152
+      net.core.somaxconn = 65535
+      net.ipv4.tcp_max_syn_backlog = 65535
+      net.core.netdev_max_backlog = 65535
+      net.ipv4.ip_local_port_range = 1024 65535
+      net.ipv4.tcp_tw_reuse = 1
+      net.ipv4.tcp_fin_timeout = 15
+      net.ipv4.tcp_keepalive_time = 60
+      net.ipv4.tcp_keepalive_intvl = 10
+      net.ipv4.tcp_keepalive_probes = 6
+      net.ipv4.tcp_rmem = 4096 87380 16777216
+      net.ipv4.tcp_wmem = 4096 65536 16777216
+      net.core.rmem_max = 16777216
+      net.core.wmem_max = 16777216
+      net.ipv4.tcp_mem = 786432 1048576 26777216
+      net.netfilter.nf_conntrack_max = 1048576
+      vm.swappiness = 1
+
+  - path: /etc/security/limits.d/99-yeet.conf
+    content: |
+      * soft nofile 1048576
+      * hard nofile 1048576
+      root soft nofile 1048576
+      root hard nofile 1048576
+
+  - path: /etc/docker/daemon.json
+    content: |
+      {
+        "log-driver": "json-file",
+        "log-opts": { "max-size": "100m", "max-file": "5" },
+        "live-restore": true,
+        "default-ulimits": { "nofile": { "Name": "nofile", "Hard": 1048576, "Soft": 1048576 } }
+      }
+
+  - path: /opt/yeet/.env
+    permissions: "0600"
+    content: |
+      BACKEND_IMAGE=${backend_image}
+      BACKEND_PORT=${backend_port}
+      TUNNEL_TOKEN=${tunnel_token}
+      APPDB_PASSWORD=${appdb_password}
+      GRAFANA_PASSWORD=${grafana_password}
+      GRAFANA_HOST=${grafana_host}
+
+  - path: /opt/yeet/backend.env
+    permissions: "0600"
+    content: |
+      YEET_CHAIN=${yeet_chain}
+      RUST_LOG=info,yeet=debug
+      BIND_ADDR=0.0.0.0:8080
+      METRICS_ADDR=0.0.0.0:9464
+      APP_DATABASE_URL=postgres://yeet:${appdb_password}@/yeet_app?host=/var/run/postgresql
+      TS_INDEXER_DATABASE_URL=postgres://yeet_indexer:${ts_indexer_password}@${timescale_ip}:5432/yeet_ts
+      TS_API_DATABASE_URL=postgres://yeet_api:${ts_api_password}@${timescale_ip}:5432/yeet_ts
+      QUICKNODE_ARC_HTTP=${quicknode_http}
+      QUICKNODE_ARC_WS=${quicknode_ws}
+      PINATA_JWT=${pinata_jwt}
+      R2_ACCOUNT_ID=${r2_account_id}
+      R2_BUCKET=${r2_bucket}
+      R2_ACCESS_KEY_ID=CHANGE_ME_after_creating_an_R2_API_token
+      R2_SECRET_ACCESS_KEY=CHANGE_ME
+      IMAGES_BASE_URL=https://${images_host}
+      TRUST_CF_CONNECTING_IP=true
+      WS_MAX_CONNECTIONS=100000
+
+  - path: /opt/yeet/docker-compose.yml
+    permissions: "0644"
+    content: |
+      ${indent(6, compose_file)}
+
+  - path: /opt/yeet/prometheus.yml
+    permissions: "0644"
+    content: |
+      ${indent(6, prometheus_yml)}
+
+  - path: /opt/yeet/backup.sh
+    permissions: "0755"
+    content: |
+      #!/usr/bin/env bash
+      # nightly: app Postgres -> R2 (trades/candles are re-derivable from chain, not backed up)
+      set -euo pipefail
+      . /opt/yeet/backend.env
+      TS=$(date -u +%Y%m%dT%H%M%SZ)
+      docker exec yeet-appdb pg_dump -U yeet -d yeet_app -Fc | zstd -3 > /tmp/appdb-$TS.dump.zst
+      AWS_ACCESS_KEY_ID=$R2_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY=$R2_SECRET_ACCESS_KEY \
+        aws --endpoint-url https://$R2_ACCOUNT_ID.r2.cloudflarestorage.com s3 cp /tmp/appdb-$TS.dump.zst s3://$R2_BUCKET/backups/appdb-$TS.dump.zst
+      rm -f /tmp/appdb-$TS.dump.zst
+
+  - path: /etc/cron.d/yeet-backup
+    content: |
+      15 3 * * * root /opt/yeet/backup.sh >> /var/log/yeet-backup.log 2>&1
+
+  - path: /etc/ssh/sshd_config.d/99-yeet.conf
+    content: |
+      PasswordAuthentication no
+      PermitRootLogin prohibit-password
+      KbdInteractiveAuthentication no
+      X11Forwarding no
+      ClientAliveInterval 30
+
+runcmd:
+  - sysctl --system
+  - systemctl enable --now nftables
+  - nft -f /etc/nftables.conf
+  - systemctl restart ssh
+  - mkdir -p /var/lib/yeet/appdb /var/lib/yeet/prometheus /var/lib/yeet/grafana
+  - chown 65534:65534 /var/lib/yeet/prometheus
+  - chown 472:472 /var/lib/yeet/grafana
+  - systemctl enable --now docker
+  - echo "${ghcr_token}" | docker login ghcr.io -u "${ghcr_username}" --password-stdin
+  - cd /opt/yeet && docker compose --env-file /opt/yeet/.env pull
+  - cd /opt/yeet && docker compose --env-file /opt/yeet/.env up -d

@@ -1,0 +1,97 @@
+#cloud-config
+package_update: true
+package_upgrade: true
+packages:
+  - docker.io
+  - docker-compose-v2
+  - nftables
+  - zstd
+  - chrony
+
+write_files:
+  - path: /etc/nftables.conf
+    permissions: "0644"
+    content: |
+      #!/usr/sbin/nft -f
+      flush ruleset
+      table inet filter {
+        chain input {
+          type filter hook input priority 0; policy drop;
+          iif lo accept
+          ct state established,related accept
+          ct state invalid drop
+          ip protocol icmp accept
+          ip6 nexthdr icmpv6 accept
+          # Postgres + exporters + SSH(jump) ONLY from the monolith over the private network
+          ip saddr ${monolith_ip} tcp dport { 5432, 9100, 9187, 22 } accept
+        }
+        chain forward {
+          type filter hook forward priority 0; policy drop;
+        }
+        chain output {
+          type filter hook output priority 0; policy accept;
+        }
+      }
+
+  - path: /etc/sysctl.d/99-yeet.conf
+    content: |
+      vm.swappiness = 1
+      vm.nr_hugepages = 4608
+      vm.overcommit_memory = 2
+      vm.overcommit_ratio = 90
+      kernel.shmmax = 17179869184
+      kernel.shmall = 4194304
+      net.core.somaxconn = 4096
+      net.ipv4.tcp_keepalive_time = 60
+      net.ipv4.tcp_keepalive_intvl = 10
+      net.ipv4.tcp_keepalive_probes = 6
+
+  - path: /etc/docker/daemon.json
+    content: |
+      { "log-driver": "json-file", "log-opts": { "max-size": "100m", "max-file": "5" }, "live-restore": true }
+
+  - path: /opt/yeet/.env
+    permissions: "0600"
+    content: |
+      PRIVATE_IP=${private_ip}
+      MONOLITH_IP=${monolith_ip}
+      SUPERUSER_PASSWORD=${superuser_password}
+      INDEXER_PASSWORD=${indexer_password}
+      API_PASSWORD=${api_password}
+
+  - path: /opt/yeet/docker-compose.yml
+    permissions: "0644"
+    content: |
+      ${indent(6, compose_file)}
+
+  - path: /opt/yeet/postgresql.conf
+    permissions: "0644"
+    content: |
+      ${indent(6, postgresql_conf)}
+
+  - path: /opt/yeet/pg_hba.conf
+    permissions: "0644"
+    content: |
+      ${indent(6, pg_hba_conf)}
+
+  - path: /opt/yeet/init/01-roles.sql
+    permissions: "0644"
+    content: |
+      ${indent(6, init_roles_sql)}
+
+  - path: /etc/ssh/sshd_config.d/99-yeet.conf
+    content: |
+      PasswordAuthentication no
+      PermitRootLogin prohibit-password
+      KbdInteractiveAuthentication no
+      X11Forwarding no
+
+runcmd:
+  - sysctl --system
+  - systemctl enable --now nftables
+  - nft -f /etc/nftables.conf
+  - systemctl restart ssh
+  - mkdir -p /var/lib/yeet/timescale
+  - chown -R 1000:1000 /var/lib/yeet/timescale
+  - systemctl enable --now docker
+  - cd /opt/yeet && docker compose --env-file /opt/yeet/.env up -d

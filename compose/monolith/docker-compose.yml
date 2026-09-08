@@ -1,0 +1,106 @@
+services:
+  backend:
+    image: ${BACKEND_IMAGE}
+    container_name: yeet-backend
+    restart: unless-stopped
+    # Only loopback. cloudflared reaches it on localhost; nothing else can.
+    ports:
+      - "127.0.0.1:${BACKEND_PORT}:8080"
+      - "127.0.0.1:9464:9464"      # /metrics
+    env_file: /opt/yeet/backend.env
+    volumes:
+      - pgsock:/var/run/postgresql
+    depends_on:
+      appdb: { condition: service_healthy }
+    ulimits:
+      nofile: { soft: 1048576, hard: 1048576 }
+    deploy:
+      resources:
+        limits: { memory: 20g }
+    healthcheck:                   # backend image must ship wget (debian-slim base) or expose `yeet healthcheck`
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/healthz"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    logging:
+      driver: json-file
+      options: { max-size: "100m", max-file: "5" }
+
+  appdb:
+    image: postgres:17
+    container_name: yeet-appdb
+    restart: unless-stopped
+    # unix socket only (shared volume). TCP on loopback for psql/tools.
+    ports:
+      - "127.0.0.1:5433:5432"
+    environment:
+      POSTGRES_USER: yeet
+      POSTGRES_PASSWORD: ${APPDB_PASSWORD}
+      POSTGRES_DB: yeet_app
+    command:
+      - postgres
+      - -c shared_buffers=2GB
+      - -c effective_cache_size=6GB
+      - -c work_mem=32MB
+      - -c maintenance_work_mem=512MB
+      - -c wal_compression=zstd
+      - -c random_page_cost=1.1
+      - -c log_min_duration_statement=20ms
+      - -c unix_socket_directories=/var/run/postgresql
+    volumes:
+      - /var/lib/yeet/appdb:/var/lib/postgresql/data
+      - pgsock:/var/run/postgresql
+    shm_size: 1g
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U yeet -d yeet_app"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+
+  cloudflared:
+    image: cloudflare/cloudflared:2026.8.3
+    # no container_name: allows `--scale cloudflared=N` (each replica holds 4 HA connections to Cloudflare)
+    restart: unless-stopped
+    network_mode: host             # so "localhost:8080" in the tunnel config is the backend
+    command: tunnel --no-autoupdate --metrics 127.0.0.1:2000 --protocol quic run
+    environment:
+      TUNNEL_TOKEN: ${TUNNEL_TOKEN}
+
+  prometheus:
+    image: prom/prometheus:v2.54.1
+    container_name: prometheus
+    restart: unless-stopped
+    network_mode: host             # scrape loopback + private-net exporters
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.retention.time=30d
+      - --web.listen-address=127.0.0.1:9090
+    volumes:
+      - /opt/yeet/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - /var/lib/yeet/prometheus:/prometheus
+
+  grafana:
+    image: grafana/grafana:11.2.0
+    container_name: grafana
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD}
+      GF_SERVER_ROOT_URL: https://${GRAFANA_HOST}
+      GF_AUTH_ANONYMOUS_ENABLED: "false"
+    volumes:
+      - /var/lib/yeet/grafana:/var/lib/grafana
+
+  node-exporter:
+    image: prom/node-exporter:v1.8.2
+    container_name: node-exporter
+    restart: unless-stopped
+    network_mode: host
+    pid: host
+    command: ["--path.rootfs=/host", "--web.listen-address=127.0.0.1:9100"]
+    volumes:
+      - /:/host:ro,rslave
+
+volumes:
+  pgsock:

@@ -1,0 +1,7 @@
+# TYPE  DATABASE   USER          ADDRESS             METHOD
+local   all        all                               trust
+host    all        postgres      127.0.0.1/32        scram-sha-256
+host    yeet_ts    yeet_indexer  ${monolith_ip}/32   scram-sha-256
+host    yeet_ts    yeet_api      ${monolith_ip}/32   scram-sha-256
+host    all        all           0.0.0.0/0           reject
+host    all        all           ::/0                reject

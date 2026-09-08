@@ -1,0 +1,22 @@
+# cp terraform.tfvars.example terraform.tfvars   (git-ignored)
+cloudflare_account_id = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+cloudflare_zone_id    = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+
+ssh_public_key = "ssh-ed25519 AAAA... james"
+admin_emails   = ["jamesmichael.mallon1@googlemail.com"]
+
+yeet_chain     = "arc-testnet"
+backend_image  = "ghcr.io/jamesmallon1/yeet-backend:latest"
+
+# secrets: prefer env vars
+#   export TF_VAR_hcloud_token=...
+#   export TF_VAR_cloudflare_api_token=...
+#   export TF_VAR_ghcr_token=...
+#   export TF_VAR_quicknode_http=https://....quiknode.pro/...
+#   export TF_VAR_quicknode_ws=wss://....quiknode.pro/...
+#   export TF_VAR_pinata_jwt=...
+
+enable_managed_waf = false   # true on Pro+
+
+# Optional once the GitHub app is connected in the Cloudflare dashboard:
+# pages_github = { owner = "Jamesmallon1", repo_name = "yeet-frontend", repo_id = "123456789", owner_id = "987654321" }

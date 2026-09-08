@@ -1,0 +1,7 @@
+secrets.env
+*.tfstate
+*.tfstate.*
+terraform/.terraform/
+terraform/terraform.tfvars
+terraform/backend.hcl
+terraform/tfplan
