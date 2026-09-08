@@ -116,6 +116,19 @@ resource "cloudflare_ruleset" "waf_managed" {
 
   rules = [
     {
+      # multipart image uploads trip the managed rules (body anomaly). The backend validates and re-encodes every
+      # upload and the route is behind Turnstile + a 5/min rate limit, so skip managed rules for this one path.
+      ref         = "skip_managed_for_launch"
+      description = "skip managed WAF for the token launch upload"
+      expression  = "(http.host eq \"${local.api_host}\" and http.request.uri.path eq \"/api/v1/tokens/launch\" and http.request.method eq \"POST\")"
+      action      = "skip"
+      enabled     = true
+      action_parameters = {
+        ruleset = "current"
+      }
+      logging = { enabled = true }
+    },
+    {
       ref         = "cf_managed"
       description = "Cloudflare Managed Ruleset"
       expression  = "(http.host in {\"${local.api_host}\" \"${local.ws_host}\"})"
