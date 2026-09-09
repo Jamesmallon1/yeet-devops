@@ -129,6 +129,19 @@ resource "cloudflare_ruleset" "waf_managed" {
       logging = { enabled = true }
     },
     {
+      # WebSocket handshakes carry nothing the managed rules can inspect usefully, but browser cookies on the
+      # upgrade request trip the same anomaly rule; the backend authenticates nothing on /ws and rate limits apply.
+      ref         = "skip_managed_for_ws"
+      description = "skip managed WAF for the websocket host"
+      expression  = "(http.host eq \"${local.ws_host}\")"
+      action      = "skip"
+      enabled     = true
+      action_parameters = {
+        ruleset = "current"
+      }
+      logging = { enabled = true }
+    },
+    {
       ref         = "cf_managed"
       description = "Cloudflare Managed Ruleset"
       expression  = "(http.host in {\"${local.api_host}\" \"${local.ws_host}\"})"
