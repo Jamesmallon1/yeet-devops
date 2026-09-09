@@ -247,6 +247,7 @@ resource "cloudflare_pages_project" "frontend" {
         NEXT_PUBLIC_REOWN_PROJECT_ID      = { type = "plain_text", value = var.reown_project_id }
         NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN = { type = "plain_text", value = var.posthog_project_token }
         NEXT_PUBLIC_POSTHOG_HOST          = { type = "plain_text", value = var.posthog_host }
+        NEXT_PUBLIC_YEET_TOKEN            = { type = "plain_text", value = var.yeet_token }
       }
     }
     preview = {
@@ -262,6 +263,7 @@ resource "cloudflare_pages_project" "frontend" {
         NEXT_PUBLIC_REOWN_PROJECT_ID      = { type = "plain_text", value = var.reown_project_id }
         NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN = { type = "plain_text", value = var.posthog_project_token }
         NEXT_PUBLIC_POSTHOG_HOST          = { type = "plain_text", value = var.posthog_host }
+        NEXT_PUBLIC_YEET_TOKEN            = { type = "plain_text", value = var.yeet_token }
       }
     }
   }

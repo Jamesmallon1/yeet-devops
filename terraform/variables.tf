@@ -166,3 +166,9 @@ variable "posthog_host" {
   type    = string
   default = "https://eu.i.posthog.com"
 }
+
+variable "yeet_token" {
+  description = "Address of the protocol YEET token the home statement is built around"
+  type        = string
+  default     = "0xa8565fd7e62bd87829d4152e18342a2ebfa37442"
+}
