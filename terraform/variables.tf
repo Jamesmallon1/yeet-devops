@@ -151,3 +151,18 @@ variable "turnstile_site_key" {
   type    = string
   default = ""
 }
+
+variable "reown_project_id" {
+  type    = string
+  default = ""
+}
+
+variable "posthog_project_token" {
+  type    = string
+  default = ""
+}
+
+variable "posthog_host" {
+  type    = string
+  default = "https://eu.i.posthog.com"
+}

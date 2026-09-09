@@ -231,24 +231,30 @@ resource "cloudflare_pages_project" "frontend" {
       compatibility_date  = "2026-09-01"
       compatibility_flags = ["nodejs_compat"]
       env_vars = {
-        NEXT_PUBLIC_YEET_CHAIN         = { type = "plain_text", value = var.yeet_chain }
-        NEXT_PUBLIC_API_URL            = { type = "plain_text", value = "https://${local.api_host}" }
-        NEXT_PUBLIC_WS_URL             = { type = "plain_text", value = "wss://${local.ws_host}/ws" }
-        NEXT_PUBLIC_IMAGES_URL         = { type = "plain_text", value = "https://${local.images_host}" }
-        NEXT_PUBLIC_TURNSTILE_SITE_KEY = { type = "plain_text", value = var.turnstile_site_key }
-        NEXT_PUBLIC_STACK              = { type = "plain_text", value = "lite" }
+        NEXT_PUBLIC_YEET_CHAIN            = { type = "plain_text", value = var.yeet_chain }
+        NEXT_PUBLIC_API_URL               = { type = "plain_text", value = "https://${local.api_host}" }
+        NEXT_PUBLIC_WS_URL                = { type = "plain_text", value = "wss://${local.ws_host}/ws" }
+        NEXT_PUBLIC_IMAGES_URL            = { type = "plain_text", value = "https://${local.images_host}" }
+        NEXT_PUBLIC_TURNSTILE_SITE_KEY    = { type = "plain_text", value = var.turnstile_site_key }
+        NEXT_PUBLIC_STACK                 = { type = "plain_text", value = "lite" }
+        NEXT_PUBLIC_REOWN_PROJECT_ID      = { type = "plain_text", value = var.reown_project_id }
+        NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN = { type = "plain_text", value = var.posthog_project_token }
+        NEXT_PUBLIC_POSTHOG_HOST          = { type = "plain_text", value = var.posthog_host }
       }
     }
     preview = {
       compatibility_date  = "2026-09-01"
       compatibility_flags = ["nodejs_compat"]
       env_vars = {
-        NEXT_PUBLIC_YEET_CHAIN         = { type = "plain_text", value = "arc-testnet" }
-        NEXT_PUBLIC_API_URL            = { type = "plain_text", value = "https://${local.api_host}" }
-        NEXT_PUBLIC_WS_URL             = { type = "plain_text", value = "wss://${local.ws_host}/ws" }
-        NEXT_PUBLIC_IMAGES_URL         = { type = "plain_text", value = "https://${local.images_host}" }
-        NEXT_PUBLIC_TURNSTILE_SITE_KEY = { type = "plain_text", value = var.turnstile_site_key }
-        NEXT_PUBLIC_STACK              = { type = "plain_text", value = "lite" }
+        NEXT_PUBLIC_YEET_CHAIN            = { type = "plain_text", value = "arc-testnet" }
+        NEXT_PUBLIC_API_URL               = { type = "plain_text", value = "https://${local.api_host}" }
+        NEXT_PUBLIC_WS_URL                = { type = "plain_text", value = "wss://${local.ws_host}/ws" }
+        NEXT_PUBLIC_IMAGES_URL            = { type = "plain_text", value = "https://${local.images_host}" }
+        NEXT_PUBLIC_TURNSTILE_SITE_KEY    = { type = "plain_text", value = var.turnstile_site_key }
+        NEXT_PUBLIC_STACK                 = { type = "plain_text", value = "lite" }
+        NEXT_PUBLIC_REOWN_PROJECT_ID      = { type = "plain_text", value = var.reown_project_id }
+        NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN = { type = "plain_text", value = var.posthog_project_token }
+        NEXT_PUBLIC_POSTHOG_HOST          = { type = "plain_text", value = var.posthog_host }
       }
     }
   }

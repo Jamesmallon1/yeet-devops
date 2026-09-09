@@ -150,28 +150,30 @@ resource "hcloud_server" "monolith" {
   }
 
   user_data = templatefile("${path.module}/templates/cloud-init-monolith.yaml.tftpl", {
-    private_ip          = local.monolith_ip
-    timescale_ip        = local.timescale_ip
-    tunnel_token        = data.cloudflare_zero_trust_tunnel_cloudflared_token.main.token
-    backend_image       = var.backend_image
-    ghcr_username       = var.ghcr_username
-    ghcr_token          = var.ghcr_token
-    yeet_chain          = var.yeet_chain
-    quicknode_http      = var.quicknode_http
-    quicknode_ws        = var.quicknode_ws
-    pinata_jwt          = var.pinata_jwt
-    turnstile_secret    = var.turnstile_secret
-    r2_bucket           = var.enable_r2 ? cloudflare_r2_bucket.images[0].name : "yeet-images-${var.env}"
-    r2_account_id       = var.cloudflare_account_id
-    images_host         = local.images_host
-    appdb_password      = random_password.appdb.result
-    ts_indexer_password = random_password.timescale_indexer.result
-    ts_api_password     = random_password.timescale_api.result
-    grafana_password    = random_password.grafana_admin.result
-    grafana_host        = local.grafana_host
-    backend_port        = local.backend_port
-    compose_file        = file("${path.module}/../compose/monolith/docker-compose.yml")
-    prometheus_yml      = file("${path.module}/../compose/monolith/prometheus.yml")
+    private_ip            = local.monolith_ip
+    timescale_ip          = local.timescale_ip
+    tunnel_token          = data.cloudflare_zero_trust_tunnel_cloudflared_token.main.token
+    backend_image         = var.backend_image
+    ghcr_username         = var.ghcr_username
+    ghcr_token            = var.ghcr_token
+    yeet_chain            = var.yeet_chain
+    quicknode_http        = var.quicknode_http
+    quicknode_ws          = var.quicknode_ws
+    pinata_jwt            = var.pinata_jwt
+    turnstile_secret      = var.turnstile_secret
+    posthog_project_token = var.posthog_project_token
+    posthog_host          = var.posthog_host
+    r2_bucket             = var.enable_r2 ? cloudflare_r2_bucket.images[0].name : "yeet-images-${var.env}"
+    r2_account_id         = var.cloudflare_account_id
+    images_host           = local.images_host
+    appdb_password        = random_password.appdb.result
+    ts_indexer_password   = random_password.timescale_indexer.result
+    ts_api_password       = random_password.timescale_api.result
+    grafana_password      = random_password.grafana_admin.result
+    grafana_host          = local.grafana_host
+    backend_port          = local.backend_port
+    compose_file          = file("${path.module}/../compose/monolith/docker-compose.yml")
+    prometheus_yml        = file("${path.module}/../compose/monolith/prometheus.yml")
   })
 
   depends_on = [hcloud_network_subnet.main, hcloud_server.timescale]
