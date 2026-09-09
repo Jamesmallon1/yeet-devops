@@ -203,15 +203,9 @@ resource "cloudflare_r2_bucket" "images" {
   storage_class = "Standard"
 }
 
-resource "cloudflare_r2_custom_domain" "images" {
-  count       = var.enable_r2 ? 1 : 0
-  account_id  = var.cloudflare_account_id
-  bucket_name = cloudflare_r2_bucket.images[0].name
-  domain      = local.images_host
-  zone_id     = var.cloudflare_zone_id
-  enabled     = true
-  min_tls     = "1.2"
-}
+# images.yeet.family is attached to the bucket (done via Terraform on 8 Sep). The provider cannot import
+# cloudflare_r2_custom_domain, so after the state rebuild it is managed outside Terraform. Recreate by hand or
+# via the R2 dashboard if the bucket is ever recreated.
 
 # ---------------- Pages for the Next.js frontend ----------------
 resource "cloudflare_pages_project" "frontend" {

@@ -46,3 +46,9 @@ scripts/     bootstrap.sh (create), ssh.sh (tunnel ssh), deploy.sh (roll image),
 - `/api/v1/tokens/launch` bot protection = Cloudflare **Turnstile** (frontend widget + backend verification), not a WAF challenge: challenges cannot be solved by `fetch()`. Rate limit 5/min/IP is the backstop.
 - Cloud-init runs once; `hcloud_server.user_data` changes are ignored on purpose. Config drift after day 1 goes through `scripts/`.
 - Destroying the timescale server destroys the data (local NVMe). Everything in it is re-derivable by replaying the indexer from the deploy block.
+
+## State rebuild (9 Sep 2026)
+The local Terraform state was lost once and rebuilt with `terraform import`. Consequences: `random_password.*` in state no longer
+match the live DB passwords (the real ones are in `/opt/yeet/.env` and `/opt/yeet/backend.env` on the monolith and `/opt/yeet/.env`
+on the Timescale box), the tunnel secret is `ignore_changes`, and `images.yeet.family` (R2 custom domain) is managed outside
+Terraform. Back the state file up: it is git-ignored and lives only at `terraform/terraform.tfstate`.

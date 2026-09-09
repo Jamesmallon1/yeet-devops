@@ -10,6 +10,10 @@ resource "cloudflare_zero_trust_tunnel_cloudflared" "main" {
   name          = "${local.name}-monolith"
   config_src    = "cloudflare"
   tunnel_secret = random_id.tunnel_secret.b64_std
+
+  lifecycle {
+    ignore_changes = [tunnel_secret] # state was rebuilt once; a new local secret must not replace the live tunnel
+  }
 }
 
 data "cloudflare_zero_trust_tunnel_cloudflared_token" "main" {

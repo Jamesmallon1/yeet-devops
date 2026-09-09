@@ -125,7 +125,7 @@ resource "hcloud_server" "timescale" {
   depends_on = [hcloud_network_subnet.main]
 
   lifecycle {
-    ignore_changes = [user_data] # cloud-init runs once; later changes go through scripts/deploy.sh
+    ignore_changes = [user_data, ssh_keys] # cloud-init + keys are applied once at creation; state was re-imported
   }
 }
 
@@ -179,6 +179,6 @@ resource "hcloud_server" "monolith" {
   depends_on = [hcloud_network_subnet.main, hcloud_server.timescale]
 
   lifecycle {
-    ignore_changes = [user_data]
+    ignore_changes = [user_data, ssh_keys]
   }
 }
