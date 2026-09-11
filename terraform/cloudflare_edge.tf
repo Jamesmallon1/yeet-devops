@@ -243,7 +243,7 @@ resource "cloudflare_pages_project" "frontend" {
         NEXT_PUBLIC_WS_URL                = { type = "plain_text", value = "wss://${local.ws_host}/ws" }
         NEXT_PUBLIC_IMAGES_URL            = { type = "plain_text", value = "https://${local.images_host}" }
         NEXT_PUBLIC_TURNSTILE_SITE_KEY    = { type = "plain_text", value = var.turnstile_site_key }
-        NEXT_PUBLIC_STACK                 = { type = "plain_text", value = "lite" }
+        NEXT_PUBLIC_STACK                 = { type = "plain_text", value = "prod" }
         NEXT_PUBLIC_REOWN_PROJECT_ID      = { type = "plain_text", value = var.reown_project_id }
         NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN = { type = "plain_text", value = var.posthog_project_token }
         NEXT_PUBLIC_POSTHOG_HOST          = { type = "plain_text", value = var.posthog_host }
@@ -259,7 +259,7 @@ resource "cloudflare_pages_project" "frontend" {
         NEXT_PUBLIC_WS_URL                = { type = "plain_text", value = "wss://${local.ws_host}/ws" }
         NEXT_PUBLIC_IMAGES_URL            = { type = "plain_text", value = "https://${local.images_host}" }
         NEXT_PUBLIC_TURNSTILE_SITE_KEY    = { type = "plain_text", value = var.turnstile_site_key }
-        NEXT_PUBLIC_STACK                 = { type = "plain_text", value = "lite" }
+        NEXT_PUBLIC_STACK                 = { type = "plain_text", value = "prod" }
         NEXT_PUBLIC_REOWN_PROJECT_ID      = { type = "plain_text", value = var.reown_project_id }
         NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN = { type = "plain_text", value = var.posthog_project_token }
         NEXT_PUBLIC_POSTHOG_HOST          = { type = "plain_text", value = var.posthog_host }
